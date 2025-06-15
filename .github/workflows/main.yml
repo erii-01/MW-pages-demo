@@ -1,0 +1,43 @@
+name: Deploy Mikroways Site
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu:latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+
+      - name: Setup Hugo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl -sL https://github.com/gohugoio/hugo/releases/download/v0.122.0/hugo_extended_0.122.0_Linux-64bit.tar.gz \
+            | sudo tar xzf - -C /usr/local/bin hugo
+
+      - name: Build Hugo site
+        run: hugo --baseURL "https://erii-01.github.io/MW-pages-demo/"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-dir
+          path: public
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
